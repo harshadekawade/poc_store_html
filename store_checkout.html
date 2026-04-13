@@ -285,13 +285,14 @@
   const MIN_QTY = 1;
 
   // ── Bridge ───────────────────────────────────────────────────────────────────
-  const bridgeAvailable = Boolean(window.NativeAnalytics);
+  const bridgeAvailable = Boolean(window.notifyNative);
 
   // ── GTM bridge helper ────────────────────────────────────────────────────────
+  // Sends events through SecureBridge (LOG_EVENT) when inside the Flutter WebView.
+  // Falls back to dataLayer push for standalone browser / Web GTM.
   function trackEvent(name, eventParams) {
-    const payload = { event: name, params: eventParams };
-    if (window.NativeAnalytics) {
-      window.NativeAnalytics.postMessage(JSON.stringify(payload));
+    if (window.notifyNative) {
+      window.notifyNative('LOG_EVENT', { name: name, params: eventParams });
     } else {
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({ event: name, ...eventParams });
@@ -441,7 +442,7 @@
       <div class="bridge-pill">
         <div class="dot ${bridgeAvailable ? 'dot-green' : 'dot-red'}"></div>
         <span>${bridgeAvailable
-          ? 'Bridge active' + (userId ? '  ·  user: ' + userId : '')
+          ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
           : 'Standalone browser'}</span>
       </div>
 
