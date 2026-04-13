@@ -82,42 +82,33 @@ const userId = params.get('user_id') || '';
 const dot = document.getElementById('bridgeDot');
 const label = document.getElementById('bridgeLabel');
 
-/**
- * Initialize Bridge Connection
- */
-function initBridge() {
-    // 1. Check if bridge is already there (immediate check)
-    if (window.notifyNative) {
-        _updateBridgePill(true);
-    } 
-    // 2. Otherwise, wait for the event we added to Flutter above
-    else {
-        window.addEventListener('secureBridge:ready', () => {
-            _updateBridgePill(true);
-        }, { once: true });
+function updateStatus() {
+    const ready = typeof window.sendToNative === 'function' &&
+                  typeof window.isSecureBridgeAvailable === 'function' &&
+                  window.isSecureBridgeAvailable();
+
+    if (ready) {
+      dot.className          = 'dot-green';
+      label.textContent = 'Secure bridge ready';
+    } else if (typeof window.sendToNative === 'function') {
+      dot.className          = 'dot-red';
+      label.textContent = 'Bridge script loaded';
+    } else {
+      dot.className          = 'dot';
+      label.textContent = 'SecureBridge not detected — running in browser';
     }
-}
-
-// Call this immediately when store.js loads
-initBridge();
-
-/**
- * Updates the bridge status UI based on connection
- */
-function _updateBridgePill(connected) {
-
-    if (!dot || !label) return;
-    dot.className = 'dot ' + (connected ? 'dot-green' : 'dot-red');
-    label.textContent = connected
-        ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
-        : 'Bridge not found (standalone browser)';
-}
+  }
 
 // --- Bridge Listeners ---
-window.addEventListener('secureBridge:ready', () => _updateBridgePill(true), { once: true });
+// window.addEventListener('secureBridge:ready', () => _updateBridgePill(true), { once: true });
 
-const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
-window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
+// const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
+// window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
+
+window.addEventListener('secureBridge:ready', () => {
+    log('🔐 Secure bridge initialised (AES-256-CBC + HMAC-SHA256)', 'success');
+    updateStatus();
+  });
 
 /**
  * Event tracking helper for Flutter vs Web GTM
