@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — QI Spine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding-bottom: 110px;
+    }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 16px;
+      background: #fff;
+      border-bottom: 1px solid #ebebeb;
+      font-size: 13px;
+      color: #888;
+    }
+    .breadcrumb a {
+      color: #FF6B00;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .breadcrumb-current { color: #1a1a1a; font-weight: 600; }
+
+    /* ── Section card ── */
+    .section-card {
+      background: #fff;
+      border-radius: 14px;
+      margin: 14px 16px 0;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #888;
+      margin-bottom: 14px;
+    }
+
+    /* ── Product summary row ── */
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .product-name    { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .product-meta    { font-size: 13px; color: #888; margin-top: 3px; }
+    .product-price   { font-size: 16px; font-weight: 700; color: #FF6B00; flex-shrink: 0; margin-left: 10px; }
+
+    .divider { height: 1px; background: #f0f0f0; margin: 14px 0; }
+
+    /* ── Quantity counter ── */
+    .qty-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .qty-label { font-size: 14px; font-weight: 600; color: #333; }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: #f5f5f5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .qty-btn {
+      width: 38px;
+      height: 38px;
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      color: #FF6B00;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:active { background: #ebebeb; }
+    .qty-btn:disabled { color: #ccc; cursor: default; }
+    .qty-display {
+      min-width: 38px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    /* ── Total row ── */
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .total-label { font-size: 15px; font-weight: 600; color: #333; }
+    .total-val   { font-size: 22px; font-weight: 800; color: #FF6B00; }
+
+    /* ── Billing info ── */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-key   { color: #888; }
+    .info-val   { color: #1a1a1a; font-weight: 600; text-align: right; max-width: 60%; }
+
+    /* ── Sticky CTA ── */
+    .cta-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-top: 1px solid #ebebeb;
+      padding: 12px 16px;
+    }
+    .btn-order {
+      width: 100%;
+      padding: 15px;
+      background: #FF6B00;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-order:active   { opacity: 0.75; }
+    .btn-order:disabled { background: #ccc; cursor: default; opacity: 1; }
+    .btn-subtext {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 6px;
+    }
+
+    /* ── Success state ── */
+    .success-wrap {
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .success-icon {
+      width: 72px; height: 72px;
+      background: #E8F5E9;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+    }
+    .success-title { font-size: 22px; font-weight: 800; color: #1a1a1a; }
+    .success-sub   { font-size: 14px; color: #888; margin-top: 8px; line-height: 1.5; }
+    .success-txn   {
+      margin-top: 20px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-family: monospace;
+      color: #555;
+    }
+    .btn-back-home {
+      margin-top: 24px;
+      display: inline-block;
+      padding: 13px 28px;
+      background: #FF6B00;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* ── Bridge pill ── */
+    .bridge-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 14px 16px 0;
+      background: #fff;
+      border-radius: 20px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #555;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      width: fit-content;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: #22c55e; }
+    .dot-red   { background: #ef4444; }
+
+    .log-time { color: #666; }
+
+    /* ── Not found ── */
+    .not-found {
+      text-align: center;
+      padding: 60px 24px;
+      color: #888;
+    }
+    .not-found h2 { font-size: 18px; margin-bottom: 8px; color: #444; }
+    .not-found a  { color: #FF6B00; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="cta-container"></div>
+
+<script>
+  // ── Product data ─────────────────────────────────────────────────────────────
+  // Must stay in sync with store_list.html and store_detail.html.
+  const PRODUCTS = [
+    {
+      slug: 'plan-posture-1m',
+      name: 'Posture Correction Sprint',
+      tagline: '30-Day Desk Worker Program',
+      price: 1299,
+      currency: 'INR',
+      duration: '1 Month',
+      sessions: '4 Sessions',
+      category: 'posture',
+    },
+    {
+      slug: 'plan-basic-3m',
+      name: 'Basic Care Plan',
+      tagline: '3 Months of Guided Recovery',
+      price: 2999,
+      currency: 'INR',
+      duration: '3 Months',
+      sessions: '12 Sessions',
+      category: 'spine_care',
+    },
+    {
+      slug: 'plan-standard-6m',
+      name: 'Standard Care Plan',
+      tagline: '6 Months Comprehensive Program',
+      price: 5499,
+      currency: 'INR',
+      duration: '6 Months',
+      sessions: '24 Sessions',
+      category: 'spine_care',
+    },
+    {
+      slug: 'plan-advanced-12m',
+      name: 'Advanced Care Plan',
+      tagline: '12 Months Full Spine Rehab',
+      price: 9999,
+      currency: 'INR',
+      duration: '12 Months',
+      sessions: '48 Sessions',
+      category: 'spine_care',
+    },
+  ];
+
+  // ── URL params ───────────────────────────────────────────────────────────────
+  const params  = new URLSearchParams(window.location.search);
+  const slug    = params.get('slug') || '';
+  const userId  = params.get('user_id') || '';
+  const product = PRODUCTS.find(p => p.slug === slug);
+
+  // ── Checkout state ───────────────────────────────────────────────────────────
+  // qty is module-level — counter buttons patch only the relevant DOM nodes,
+  // avoiding a full page re-render that would reset focus / scroll position.
+  let qty = 1;
+  const MAX_QTY = 5;
+  const MIN_QTY = 1;
+
+  // ── Bridge ───────────────────────────────────────────────────────────────────
+  const bridgeAvailable = Boolean(window.NativeAnalytics);
+
+  // ── GTM bridge helper ────────────────────────────────────────────────────────
+  function trackEvent(name, eventParams) {
+    const payload = { event: name, params: eventParams };
+    if (window.NativeAnalytics) {
+      window.NativeAnalytics.postMessage(JSON.stringify(payload));
+    } else {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: name, ...eventParams });
+    }
+  }
+
+  // ── Format helpers ───────────────────────────────────────────────────────────
+  function formatPrice(amount) {
+    return '₹' + amount.toLocaleString('en-IN');
+  }
+
+  // ── Quantity update ──────────────────────────────────────────────────────────
+  // Patches only the DOM nodes that show qty and total, then fires the
+  // appropriate GTM event (add_to_cart on increment, remove_from_cart on decrement).
+  function updateQty(delta) {
+    const newQty = qty + delta;
+    if (newQty < MIN_QTY || newQty > MAX_QTY) return;
+
+    const prevQty = qty;
+    qty = newQty;
+
+    // Patch qty display
+    document.getElementById('qty-display').textContent = qty;
+    document.getElementById('total-val').textContent = formatPrice(product.price * qty);
+
+    // Update CTA button label
+    const orderBtn = document.getElementById('order-btn');
+    if (orderBtn) {
+      orderBtn.textContent = 'Place Order — ' + formatPrice(product.price * qty);
+    }
+
+    // Disable/enable counter buttons at limits
+    document.getElementById('qty-minus').disabled = qty <= MIN_QTY;
+    document.getElementById('qty-plus').disabled  = qty >= MAX_QTY;
+
+    // Fire GTM event based on direction
+    if (delta > 0) {
+      // Increment → add_to_cart (1 unit added)
+      trackEvent('add_to_cart', {
+        currency: product.currency,
+        value: product.price,
+        items: [{
+          item_id: product.slug,
+          item_name: product.name,
+          price: product.price,
+          currency: product.currency,
+          quantity: 1,
+          item_category: product.category,
+        }],
+      });
+    } else {
+      // Decrement → remove_from_cart (1 unit removed)
+      trackEvent('remove_from_cart', {
+        currency: product.currency,
+        value: product.price,
+        items: [{
+          item_id: product.slug,
+          item_name: product.name,
+          price: product.price,
+          currency: product.currency,
+          quantity: 1,
+          item_category: product.category,
+        }],
+      });
+    }
+  }
+
+  // ── Place order ──────────────────────────────────────────────────────────────
+  // Fires purchase event, then replaces the page with an inline success state.
+  // No hash/URL change — back button returns to checkout (expected UX).
+  function placeOrder() {
+    const transactionId = 'DEMO_' + Date.now();
+    const totalValue    = product.price * qty;
+
+    trackEvent('purchase', {
+      transaction_id: transactionId,
+      currency: product.currency,
+      value: totalValue,
+      user_id: userId,
+      items: [{
+        item_id: product.slug,
+        item_name: product.name,
+        price: product.price,
+        currency: product.currency,
+        quantity: qty,
+        item_category: product.category,
+      }],
+    });
+
+    // Disable order button immediately to prevent double-tap
+    const btn = document.getElementById('order-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+    // Show inline success state after a short delay
+    setTimeout(() => showSuccess(transactionId, totalValue), 400);
+  }
+
+  // ── Success state ────────────────────────────────────────────────────────────
+  function showSuccess(transactionId, totalValue) {
+    // Hide sticky CTA
+    document.getElementById('cta-container').innerHTML = '';
+
+    document.getElementById('app').innerHTML = `
+      <div class="success-wrap">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Order Placed!</div>
+        <div class="success-sub">
+          Your <strong>${product.name}</strong> has been confirmed.<br>
+          Our team will reach out within 24 hours.
+        </div>
+        <div class="success-txn">
+          Transaction ID: ${transactionId}<br>
+          Amount paid: ${formatPrice(totalValue)}<br>
+          Qty: ${qty} × ${product.name}
+        </div>
+        <br>
+        <button class="btn-back-home"
+          onclick="window.location.href='store_list.html${userId ? '?user_id=' + userId : ''}'">
+          Browse More Plans
+        </button>
+      </div>
+
+    `;
+  }
+
+  // ── Render page ──────────────────────────────────────────────────────────────
+  function render() {
+    const app = document.getElementById('app');
+    const ctaContainer = document.getElementById('cta-container');
+
+    if (!product) {
+      app.innerHTML = `
+        <div class="not-found">
+          <h2>Plan not found</h2>
+          <p style="margin-bottom:16px">Cannot load checkout for "${slug}".</p>
+          <a href="store_list.html${userId ? '?user_id=' + userId : ''}">← Back to Plans</a>
+        </div>`;
+      return;
+    }
+
+    const today = new Date().toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+
+    app.innerHTML = `
+      <!-- Bridge status -->
+      <div class="bridge-pill">
+        <div class="dot ${bridgeAvailable ? 'dot-green' : 'dot-red'}"></div>
+        <span>${bridgeAvailable
+          ? 'Bridge active' + (userId ? '  ·  user: ' + userId : '')
+          : 'Standalone browser'}</span>
+      </div>
+
+      <!-- Order summary card -->
+      <div class="section-card">
+        <div class="section-title">Order Summary</div>
+
+        <div class="product-row">
+          <div>
+            <div class="product-name">${product.name}</div>
+            <div class="product-meta">${product.duration}  ·  ${product.sessions}</div>
+          </div>
+          <div class="product-price">${formatPrice(product.price)}</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Quantity counter -->
+        <div class="qty-row">
+          <span class="qty-label">Quantity</span>
+          <div class="qty-controls">
+            <button class="qty-btn" id="qty-minus"
+              onclick="updateQty(-1)" ${qty <= MIN_QTY ? 'disabled' : ''}>−</button>
+            <span class="qty-display" id="qty-display">${qty}</span>
+            <button class="qty-btn" id="qty-plus"
+              onclick="updateQty(1)"  ${qty >= MAX_QTY ? 'disabled' : ''}>+</button>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="total-row">
+          <span class="total-label">Total</span>
+          <span class="total-val" id="total-val">${formatPrice(product.price * qty)}</span>
+        </div>
+      </div>
+
+      <!-- Billing details card (mock static) -->
+      <div class="section-card">
+        <div class="section-title">Billing Details</div>
+        <div class="info-row">
+          <span class="info-key">Name</span>
+          <span class="info-val">Demo User</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">User ID</span>
+          <span class="info-val">${userId || '—'}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Plan start</span>
+          <span class="info-val">Immediately after confirmation</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Order date</span>
+          <span class="info-val">${today}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Payment mode</span>
+          <span class="info-val">Demo (no charge)</span>
+        </div>
+      </div>
+
+    `;
+
+    // Render sticky CTA
+    ctaContainer.innerHTML = `
+      <div class="cta-bar">
+        <div style="width:100%">
+          <button class="btn-order" id="order-btn" onclick="placeOrder()">
+            Place Order — ${formatPrice(product.price * qty)}
+          </button>
+          <div class="btn-subtext">Demo only — no real payment will be charged</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Page load events ─────────────────────────────────────────────────────────
+  function firePageEvents() {
+    if (!product) return;
+
+    trackEvent('page_view', {
+      page_title: 'Checkout - ' + product.name,
+      page_location: window.location.href,
+      user_id: userId,
+    });
+
+    trackEvent('begin_checkout', {
+      currency: product.currency,
+      value: product.price * qty,
+      items: [{
+        item_id: product.slug,
+        item_name: product.name,
+        price: product.price,
+        currency: product.currency,
+        quantity: qty,
+        item_category: product.category,
+      }],
+    });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  render();
+  firePageEvents();
+  // Update document.title so Flutter AppBar can read it via controller.getTitle()
+  if (product) document.title = 'Checkout — ' + product.name;
+</script>
+</body>
+</html>

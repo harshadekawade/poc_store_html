@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QI Spine Store</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding-bottom: 32px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid #ebebeb;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-title { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+    .header-sub   { font-size: 13px; color: #888; margin-top: 2px; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #888;
+      padding: 20px 16px 10px;
+    }
+
+    /* ── Product Card ── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      margin: 0 16px 14px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .badge-popular  { background: #FFF3E0; color: #E65100; }
+    .badge-value    { background: #E8F5E9; color: #2E7D32; }
+    .badge-new      { background: #E3F2FD; color: #1565C0; }
+
+    .card-name     { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+    .card-tagline  { font-size: 13px; color: #666; margin-top: 3px; }
+    .card-divider  { height: 1px; background: #f0f0f0; margin: 12px 0; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .card-price {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FF6B00;
+    }
+    .card-duration {
+      font-size: 12px;
+      color: #888;
+      background: #f5f5f5;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .card-features {
+      list-style: none;
+      margin-bottom: 14px;
+    }
+    .card-features li {
+      font-size: 13px;
+      color: #444;
+      padding: 3px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .card-features li::before {
+      content: '✓';
+      color: #FF6B00;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .btn-view {
+      width: 100%;
+      padding: 13px;
+      background: #FF6B00;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-view:active { opacity: 0.75; }
+
+    /* ── Bridge status pill ── */
+    .bridge-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 14px 16px 0;
+      background: #fff;
+      border-radius: 20px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #555;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      width: fit-content;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: #22c55e; }
+    .dot-red   { background: #ef4444; }
+
+  </style>
+</head>
+<body>
+
+  <!-- Bridge status -->
+  <div class="bridge-pill">
+    <div class="dot" id="bridgeDot"></div>
+    <span id="bridgeLabel">Checking bridge...</span>
+  </div>
+
+  <div class="section-label">All Plans</div>
+
+  <!-- Product cards — rendered by JS -->
+  <div id="products"></div>
+
+
+<script>
+  // ── Product data ─────────────────────────────────────────────────────────────
+  // Each product has a unique slug used as the routing key across all 3 pages.
+  const PRODUCTS = [
+    {
+      slug: 'plan-posture-1m',
+      name: 'Posture Correction Sprint',
+      tagline: '30-Day Desk Worker Program',
+      price: 1299,
+      currency: 'INR',
+      duration: '1 Month',
+      badge: 'New',
+      badgeClass: 'badge-new',
+      category: 'posture',
+      features: [
+        '4 live physiotherapy sessions',
+        'Ergonomic desk setup guide',
+        'Daily stretch reminders',
+        'Video exercise library',
+      ],
+    },
+    {
+      slug: 'plan-basic-3m',
+      name: 'Basic Care Plan',
+      tagline: '3 Months of Guided Recovery',
+      price: 2999,
+      currency: 'INR',
+      duration: '3 Months',
+      badge: null,
+      badgeClass: '',
+      category: 'spine_care',
+      features: [
+        '12 live physiotherapy sessions',
+        'Customized exercise videos',
+        'Pain tracking dashboard',
+        'WhatsApp support',
+      ],
+    },
+    {
+      slug: 'plan-standard-6m',
+      name: 'Standard Care Plan',
+      tagline: '6 Months Comprehensive Program',
+      price: 5499,
+      currency: 'INR',
+      duration: '6 Months',
+      badge: 'Most Popular',
+      badgeClass: 'badge-popular',
+      category: 'spine_care',
+      features: [
+        '24 live physiotherapy sessions',
+        'Posture correction module',
+        'Nutrition guidance',
+        'Priority WhatsApp support',
+        'Monthly progress report',
+      ],
+    },
+    {
+      slug: 'plan-advanced-12m',
+      name: 'Advanced Care Plan',
+      tagline: '12 Months Full Spine Rehab',
+      price: 9999,
+      currency: 'INR',
+      duration: '12 Months',
+      badge: 'Best Value',
+      badgeClass: 'badge-value',
+      category: 'spine_care',
+      features: [
+        '48 live physiotherapy sessions',
+        'Surgeon consultation (1 session)',
+        'Advanced posture analysis',
+        'Dedicated care manager',
+        'Unlimited WhatsApp support',
+        'Quarterly progress reports',
+      ],
+    },
+  ];
+
+  // ── URL params ───────────────────────────────────────────────────────────────
+  // user_id is injected by Flutter as a query parameter: ?user_id=<id>
+  // It is forwarded to subsequent pages so the bridge always has it.
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get('user_id') || '';
+
+  // ── Bridge status ────────────────────────────────────────────────────────────
+  const bridgeAvailable = Boolean(window.NativeAnalytics);
+  const dot   = document.getElementById('bridgeDot');
+  const label = document.getElementById('bridgeLabel');
+  dot.className   = 'dot ' + (bridgeAvailable ? 'dot-green' : 'dot-red');
+  label.textContent = bridgeAvailable
+    ? 'NativeAnalytics bridge ✓' + (userId ? '  ·  user: ' + userId : '')
+    : 'Bridge not found (standalone browser)';
+
+  // ── GTM bridge helper ────────────────────────────────────────────────────────
+  // Sends events through NativeAnalytics when inside the Flutter WebView.
+  // Falls back to dataLayer push for standalone browser / Web GTM.
+  function trackEvent(name, eventParams) {
+    const payload = { event: name, params: eventParams };
+    if (window.NativeAnalytics) {
+      window.NativeAnalytics.postMessage(JSON.stringify(payload));
+    } else {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: name, ...eventParams });
+    }
+  }
+
+  // ── Format price ─────────────────────────────────────────────────────────────
+  function formatPrice(amount) {
+    return '₹' + amount.toLocaleString('en-IN');
+  }
+
+  // ── Navigate to detail page ──────────────────────────────────────────────────
+  // Forwards user_id as a query param so subsequent pages have it.
+  function goToDetail(slug, index) {
+    const product = PRODUCTS.find(p => p.slug === slug);
+    if (!product) return;
+
+    // Fire select_item before navigating
+    trackEvent('select_item', {
+      item_list_id: 'spine_plans',
+      item_list_name: 'Spine Care Plans',
+      items: [{
+        item_id: product.slug,
+        item_name: product.name,
+        price: product.price,
+        currency: product.currency,
+        index: index,
+        item_category: product.category,
+      }],
+    });
+
+    // Small delay so the event fires before navigation
+    setTimeout(() => {
+      const query = '?slug=' + slug + (userId ? '&user_id=' + userId : '');
+      window.location.href = 'store_detail.html' + query;
+    }, 120);
+  }
+
+  // ── Render product cards ─────────────────────────────────────────────────────
+  function renderProducts() {
+    const container = document.getElementById('products');
+    container.innerHTML = PRODUCTS.map((p, i) => `
+      <div class="card">
+        ${p.badge ? `<div class="card-badge ${p.badgeClass}">${p.badge}</div>` : ''}
+        <div class="card-name">${p.name}</div>
+        <div class="card-tagline">${p.tagline}</div>
+        <div class="card-divider"></div>
+        <div class="card-meta">
+          <span class="card-price">${formatPrice(p.price)}</span>
+          <span class="card-duration">${p.duration}</span>
+        </div>
+        <ul class="card-features">
+          ${p.features.slice(0, 3).map(f => `<li>${f}</li>`).join('')}
+        </ul>
+        <button class="btn-view" onclick="goToDetail('${p.slug}', ${i})">
+          View Details →
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // ── Page load events ─────────────────────────────────────────────────────────
+  // Fire page_view and view_item_list when the products list renders.
+  function firePageEvents() {
+    trackEvent('page_view', {
+      page_title: 'Store - Plans',
+      page_location: window.location.href,
+      user_id: userId,
+    });
+
+    trackEvent('view_item_list', {
+      item_list_id: 'spine_plans',
+      item_list_name: 'Spine Care Plans',
+      items: PRODUCTS.map((p, i) => ({
+        item_id: p.slug,
+        item_name: p.name,
+        price: p.price,
+        currency: p.currency,
+        index: i,
+        item_category: p.category,
+      })),
+    });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  renderProducts();
+  firePageEvents();
+</script>
+</body>
+</html>
