@@ -82,33 +82,37 @@ const userId = params.get('user_id') || '';
 const dot = document.getElementById('bridgeDot');
 const label = document.getElementById('bridgeLabel');
 
+// --- Resilient Initialization Logic ---
+
 function updateStatus() {
-    const ready = typeof window.sendToNative === 'function' &&
-                  typeof window.isSecureBridgeAvailable === 'function' &&
-                  window.isSecureBridgeAvailable();
+    // Check if the functions actually exist on the window object
+    const scriptLoaded = typeof window.sendToNative === 'function';
+    const bridgeActive = typeof window.isSecureBridgeAvailable === 'function' && window.isSecureBridgeAvailable();
 
-    if (ready) {
-      dot.className          = 'dot-green';
-      label.textContent = 'Secure bridge ready';
-    } else if (typeof window.sendToNative === 'function') {
-      dot.className          = 'dot-red';
-      label.textContent = 'Bridge script loaded';
+    if (scriptLoaded && bridgeActive) {
+        dot.className = 'dot-green';
+        label.textContent = 'Secure bridge ready';
+    } else if (scriptLoaded) {
+        // The script is there, but native handshaking might be in progress
+        dot.className = 'dot-red'; 
+        label.textContent = 'Bridge script loaded (Awaiting Native)';
     } else {
-      dot.className          = 'dot';
-      label.textContent = 'SecureBridge not detected — running in browser';
+        dot.className = 'dot';
+        label.textContent = 'SecureBridge not detected';
     }
-  }
+}
 
-// --- Bridge Listeners ---
-// window.addEventListener('secureBridge:ready', () => _updateBridgePill(true), { once: true });
+// 1. Listen for the native side to broadcast readiness
+window.addEventListener('secureBridge:ready', updateStatus);
 
-// const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
-// window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
+// 2. Immediate check
+updateStatus();
 
-window.addEventListener('secureBridge:ready', () => {
-    log('🔐 Secure bridge initialised (AES-256-CBC + HMAC-SHA256)', 'success');
-    updateStatus();
-  });
+// 3. Fallback check after 1.5 seconds (in case event was missed)
+setTimeout(updateStatus, 1500);
+
+// 4. Final safety check at 3 seconds
+setTimeout(updateStatus, 3000);
 
 /**
  * Event tracking helper for Flutter vs Web GTM
