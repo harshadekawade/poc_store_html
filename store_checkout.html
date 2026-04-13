@@ -285,7 +285,7 @@
   const MIN_QTY = 1;
 
   // ── Bridge ───────────────────────────────────────────────────────────────────
-  const bridgeAvailable = Boolean(window.notifyNative);
+  // Pill is updated via the secureBridge:ready event — see Init section below.
 
   // ── GTM bridge helper ────────────────────────────────────────────────────────
   // Sends events through SecureBridge (LOG_EVENT) when inside the Flutter WebView.
@@ -438,12 +438,10 @@
     });
 
     app.innerHTML = `
-      <!-- Bridge status -->
+      <!-- Bridge status — dot/label updated by secureBridge:ready event -->
       <div class="bridge-pill">
-        <div class="dot ${bridgeAvailable ? 'dot-green' : 'dot-red'}"></div>
-        <span>${bridgeAvailable
-          ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
-          : 'Standalone browser'}</span>
+        <div class="dot" id="bridgeDot"></div>
+        <span id="bridgeLabel">Checking bridge…</span>
       </div>
 
       <!-- Order summary card -->
@@ -548,6 +546,23 @@
   firePageEvents();
   // Update document.title so Flutter AppBar can read it via controller.getTitle()
   if (product) document.title = 'Checkout — ' + product.name;
+
+  // ── Bridge status (deferred) ─────────────────────────────────────────────────
+  // window.notifyNative is injected by Flutter after onPageFinished via
+  // secure_bridge.js — checking synchronously always yields false inside a WebView.
+  // Listen for the 'secureBridge:ready' custom event dispatched by the script.
+  function _updateBridgePill(connected) {
+    const dot   = document.getElementById('bridgeDot');
+    const label = document.getElementById('bridgeLabel');
+    if (!dot || !label) return;
+    dot.className     = 'dot ' + (connected ? 'dot-green' : 'dot-red');
+    label.textContent = connected
+      ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
+      : 'Standalone browser';
+  }
+  window.addEventListener('secureBridge:ready', () => _updateBridgePill(true), { once: true });
+  const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
+  window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
 </script>
 </body>
 </html>

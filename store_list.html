@@ -235,13 +235,24 @@
   const userId = params.get('user_id') || '';
 
   // ── Bridge status ────────────────────────────────────────────────────────────
-  const bridgeAvailable = Boolean(window.notifyNative);
+  // window.notifyNative is injected by Flutter after onPageFinished via
+  // secure_bridge.js — checking synchronously always yields false inside a WebView.
+  // Listen for the 'secureBridge:ready' custom event dispatched by the script.
   const dot   = document.getElementById('bridgeDot');
   const label = document.getElementById('bridgeLabel');
-  dot.className   = 'dot ' + (bridgeAvailable ? 'dot-green' : 'dot-red');
-  label.textContent = bridgeAvailable
-    ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
-    : 'Bridge not found (standalone browser)';
+
+  function _updateBridgePill(connected) {
+    dot.className     = 'dot ' + (connected ? 'dot-green' : 'dot-red');
+    label.textContent = connected
+      ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
+      : 'Bridge not found (standalone browser)';
+  }
+
+  // Fired by secure_bridge.js after injection + async crypto-key setup.
+  window.addEventListener('secureBridge:ready', () => _updateBridgePill(true), { once: true });
+  // Timeout fallback — if bridge never arrives (standalone browser) mark as not found.
+  const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
+  window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
 
   // ── GTM bridge helper ────────────────────────────────────────────────────────
   // Sends events through SecureBridge (LOG_EVENT) when inside the Flutter WebView.
