@@ -83,14 +83,28 @@ const dot = document.getElementById('bridgeDot');
 const label = document.getElementById('bridgeLabel');
 
 /**
+ * Initialize Bridge Connection
+ */
+function initBridge() {
+    // 1. Check if bridge is already there (immediate check)
+    if (window.notifyNative) {
+        _updateBridgePill(true);
+    } 
+    // 2. Otherwise, wait for the event we added to Flutter above
+    else {
+        window.addEventListener('secureBridge:ready', () => {
+            _updateBridgePill(true);
+        }, { once: true });
+    }
+}
+
+// Call this immediately when store.js loads
+initBridge();
+
+/**
  * Updates the bridge status UI based on connection
  */
 function _updateBridgePill(connected) {
-
-    // const nativeAvail = typeof window.isSecureBridgeAvailable === 'function'
-    //   ? window.isSecureBridgeAvailable()
-    //   : false;
-    // const scriptReady = typeof window.sendToNative === 'function';
 
     if (!dot || !label) return;
     dot.className = 'dot ' + (connected ? 'dot-green' : 'dot-red');
@@ -102,8 +116,8 @@ function _updateBridgePill(connected) {
 // --- Bridge Listeners ---
 window.addEventListener('secureBridge:ready', () => _updateBridgePill(true), { once: true });
 
-// const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
-// window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
+const _bridgeCheckTimer = setTimeout(() => _updateBridgePill(false), 3000);
+window.addEventListener('secureBridge:ready', () => clearTimeout(_bridgeCheckTimer), { once: true });
 
 /**
  * Event tracking helper for Flutter vs Web GTM
