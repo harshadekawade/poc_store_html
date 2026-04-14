@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QI Spine Store</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding-bottom: 32px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid #ebebeb;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-title { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+    .header-sub   { font-size: 13px; color: #888; margin-top: 2px; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #888;
+      padding: 20px 16px 10px;
+    }
+
+    /* ── Product Card ── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      margin: 0 16px 14px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .badge-popular  { background: #FFF3E0; color: #E65100; }
+    .badge-value    { background: #E8F5E9; color: #2E7D32; }
+    .badge-new      { background: #E3F2FD; color: #1565C0; }
+
+    .card-name     { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+    .card-tagline  { font-size: 13px; color: #666; margin-top: 3px; }
+    .card-divider  { height: 1px; background: #f0f0f0; margin: 12px 0; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .card-price {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FF6B00;
+    }
+    .card-duration {
+      font-size: 12px;
+      color: #888;
+      background: #f5f5f5;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .card-features {
+      list-style: none;
+      margin-bottom: 14px;
+    }
+    .card-features li {
+      font-size: 13px;
+      color: #444;
+      padding: 3px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .card-features li::before {
+      content: '✓';
+      color: #FF6B00;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .btn-view {
+      width: 100%;
+      padding: 13px;
+      background: #FF6B00;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-view:active { opacity: 0.75; }
+
+    /* ── Bridge status pill ── */
+    .bridge-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 14px 16px 0;
+      background: #fff;
+      border-radius: 20px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: #555;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      width: fit-content;
+    }
+    /* dot: base shape. dot-green / dot-red applied by JS after bridge check. */
+    .dot       { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #d1d5db; }
+    .dot-green { background: #22c55e; }
+    .dot-red   { background: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <div class="bridge-pill">
+    <div class="dot" id="bridgeDot"></div>
+    <span id="bridgeLabel">Checking bridge...</span>
+  </div>
+
+  <div class="section-label">All Plans</div>
+
+  <div id="products"></div>
+
+  <!-- products.js must load first — it defines the PRODUCTS array used by store_list.js -->
+  <script src="assets/products.js"></script>
+  <script src="assets/store_list.js"></script>
+</body>
+</html>
