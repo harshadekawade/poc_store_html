@@ -141,7 +141,7 @@ function _updateBridgePill(connected) {
   if (!dot || !label) return;
   dot.className     = 'dot ' + (connected ? 'dot-green' : 'dot-red');
   label.textContent = connected
-    ? 'SecureBridge ✓' + (userId ? '  ·  user: ' + userId : '')
+    ? 'Secure bridge ready'
     : 'Standalone browser';
 }
 
